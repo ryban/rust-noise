@@ -1,0 +1,9 @@
+[package]
+
+name = "noise"
+version = "0.0.1"
+authors = [ "github.com/ryban" ]
+
+[lib]
+name = "noise"
+path = "src/lib.rs"

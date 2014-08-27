@@ -1,0 +1,15 @@
+[package]
+
+name = "simplex_example"
+version = "0.0.1"
+authors = [ "github.com/ryban" ]
+
+[[bin]]
+name = "simplex_example"
+path = "src/main.rs"
+
+[dependencies.noise]
+path = "../../"
+
+[dependencies.png]
+git = "https://github.com/servo/rust-png.git"
