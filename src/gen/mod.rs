@@ -2,7 +2,7 @@
 
 pub mod simplex;
 pub mod fbm;
-// pub mod ridgedmulti;
+pub mod ridgedmulti;
 // pub mod voronoi;
 // pub mod select;
 
