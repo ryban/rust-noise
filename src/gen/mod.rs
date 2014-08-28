@@ -1,7 +1,7 @@
 // src/gen/mod.rs
 
 pub mod simplex;
-// pub mod fbm;
+pub mod fbm;
 // pub mod ridgedmulti;
 // pub mod voronoi;
 // pub mod select;
