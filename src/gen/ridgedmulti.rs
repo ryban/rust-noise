@@ -11,7 +11,6 @@ pub struct RidgedMulti {
     gain: f64,
     lacunarity: f64,
     offset: f64,
-    h: f64,
     frequencies: Vec<f64>,
     max_val: f64
 }
@@ -25,7 +24,6 @@ impl RidgedMulti {
             gain: gain,
             lacunarity: lac,
             offset: offset,
-            h: h,
             frequencies: freqs.clone(),
             max_val: RidgedMulti::calc_max(octaves, gain, offset, freqs)
             }
@@ -39,7 +37,6 @@ impl RidgedMulti {
             gain: gain,
             lacunarity: lac,
             offset: offset,
-            h: h,
             frequencies: freqs.clone(),
             max_val: RidgedMulti::calc_max(octaves, gain, offset, freqs)
             }
