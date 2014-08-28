@@ -22,3 +22,6 @@ name = "ridged"
 
 [[example]]
 name = "billow"
+
+[[example]]
+name = "voronoi"

@@ -4,7 +4,7 @@ pub mod simplex;
 pub mod fbm;
 pub mod ridgedmulti;
 pub mod billow;
-// pub mod voronoi;
+pub mod voronoi;
 // pub mod select;
 
 pub trait NoiseGen {
