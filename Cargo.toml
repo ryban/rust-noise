@@ -19,3 +19,6 @@ name = "fbm"
 
 [[example]]
 name = "ridged"
+
+[[example]]
+name = "billow"
