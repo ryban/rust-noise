@@ -61,7 +61,7 @@ impl NoiseGen for FBM {
             amp *= self.persitence;
         }
 
-        bound(n, -1.0, 1.0, -self.maxVal, self.maxVal)
+        bound(n, 0.0, 1.0, -self.maxVal, self.maxVal)
     }
 
     fn get_value3d(&mut self, x: f64, y: f64, z: f64) -> f64 {
@@ -75,7 +75,7 @@ impl NoiseGen for FBM {
             amp *= self.persitence;
         }
 
-        bound(n, -1.0, 1.0, -self.maxVal, self.maxVal)
+        bound(n, 0.0, 1.0, -self.maxVal, self.maxVal)
     }
 }
 
