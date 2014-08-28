@@ -4,6 +4,18 @@ name = "noise"
 version = "0.0.1"
 authors = [ "github.com/ryban" ]
 
+[dependencies.image]
+git = "https://github.com/PistonDevelopers/rust-image"
+
 [lib]
 name = "noise"
 path = "src/lib.rs"
+
+[[example]]
+name = "simplex"
+
+[[example]]
+name = "fbm"
+
+[[example]]
+name = "ridged"
