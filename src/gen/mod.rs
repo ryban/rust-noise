@@ -1,11 +1,9 @@
 // src/gen/mod.rs
 
-#![allow(dead_code)]
-
 pub mod simplex;
 // pub mod fbm;
-// pub mod voronoi;
 // pub mod ridgedmulti;
+// pub mod voronoi;
 // pub mod select;
 
 pub trait NoiseGen {
