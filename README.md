@@ -1,19 +1,19 @@
-rust-noise
-==========
+# rust-noise
 
-Building
---------
+
+## Building
+
 
 ```sh
 cargo build
 ```
 
-Examples
---------
+## Examples
 
-cargo test will build the examples, then you can run them individually
 
-```sh
+```cargo test``` will build the examples, then you can run them individually
+
+```
 cargo test
 ./target/simplex
 ./target/fbm
@@ -22,7 +22,7 @@ cargo test
 ./target/voronoi
 ```
 
-Issues
-------
+## Issues
+
 
 3D simplex noise does not currently work. Since Simplex is the noise source for every other generator, none of them generate 3D noise.
