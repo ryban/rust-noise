@@ -86,15 +86,14 @@ pub fn select_3d<L: NoiseGen, H: NoiseGen>(
     threshold: f64, falloff: f64,
     x: f64, y: f64, z: f64) -> f64 {
 
-    let n = control;
-    match n {
+    match control {
         n if n > (threshold + falloff) => {
             high_source.get_value3d(x, y, z)
         },
         n if n < ( threshold - falloff) => {
             low_source.get_value3d(x, y, z)
         },
-        _ => {
+        n => {
             let upper = threshold + falloff;
             let lower = threshold - falloff;
             let nn = (n-lower)/(upper-lower);
@@ -117,4 +116,67 @@ pub fn step(n: f64, steps: &[f64]) -> f64 {
     }
     // If it gets this far, this will be the last value in steps
     last_step
+}
+
+pub fn circle<I: NoiseGen, O: NoiseGen>(
+    radius: f64, cx: f64, cy: f64, falloff: f64,
+    inside: &mut I, outside: &mut O,
+    x: f64, y: f64
+    ) -> f64 {
+    let dx = x - cx;
+    let dy = y - cy;
+    let r2 = radius*radius;
+    let d2 = (dx*dx) + (dy*dy);
+    let f2 = falloff*falloff;
+    
+    match d2 {
+        d if d > (r2 + f2) => {
+            outside.get_value2d(x, y)
+        },
+        d if d < (r2 - f2) => {
+            inside.get_value2d(x, y)
+        },
+        d => {
+            let upper = r2 + f2;
+            let lower = r2 - f2;
+            let nn = (d-lower)/(upper-lower);
+            let blend = blend_quintic(nn);
+
+            lerp(inside.get_value2d(x, y),
+                 outside.get_value2d(x, y),
+                 blend)
+        }
+    }
+}
+
+pub fn sphere<I: NoiseGen, O: NoiseGen>(
+    radius: f64, cx: f64, cy: f64, cz: f64, falloff: f64,
+    inside: &mut I, outside: &mut O,
+    x: f64, y: f64, z: f64
+    ) -> f64 {
+    let dx = x - cx;
+    let dy = y - cy;
+    let dz = z - cz;
+    let r2 = radius*radius;
+    let d2 = (dx*dx) + (dy*dy) + (dz*dz);
+    let f2 = falloff*falloff;
+    
+    match d2 {
+        d if d > (r2 + f2) => {
+            outside.get_value3d(x, y, z)
+        },
+        d if d < (r2 - f2) => {
+            inside.get_value3d(x, y, z)
+        },
+        d => {
+            let upper = r2 + f2;
+            let lower = r2 - f2;
+            let nn = (d-lower)/(upper-lower);
+            let blend = blend_quintic(nn);
+
+            lerp(inside.get_value3d(x, y, z),
+                 outside.get_value3d(x, y, z),
+                 blend)
+        }
+    }
 }

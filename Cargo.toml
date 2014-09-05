@@ -31,3 +31,6 @@ name = "select"
 
 [[example]]
 name = "step"
+
+[[example]]
+name = "circle"
