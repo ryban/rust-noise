@@ -9,15 +9,15 @@ use image::GenericImage;
 use std::io::File;
 
 fn main() {
-    let mut ngen = FBM::new_rand(24, 0.5, 2.5);
+    let mut ngen = FBM::new_rand(24, 0.5, 2.5, 175.0);
     let steps: &[f64] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
 
     let img_size = 512 as u32;
     let mut imbuf = image::ImageBuf::new(img_size, img_size);
     for x in range(0, img_size) {
         for y in range(0, img_size) {
-            let xx = (x as f64)*0.006;
-            let yy = (y as f64)*0.006;
+            let xx = x as f64;
+            let yy = y as f64;
             let nn = ngen.get_value2d(xx, yy);
             let n = step(nn, steps);
             let col = (n * 255.0) as u8;

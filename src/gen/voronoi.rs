@@ -3,16 +3,17 @@ use gen::NoiseGen;
 use gen::simplex::Simplex;
 
 pub struct Voronoi {
-    simp: Simplex
+    simp: Simplex,
+    zoom: f64
 }
 
 impl Voronoi {
-    pub fn new_rand() -> Voronoi {
-        Voronoi { simp: Simplex::new_rand() }
+    pub fn new_rand(zoom: f64) -> Voronoi {
+        Voronoi { simp: Simplex::new_rand(1.0), zoom: 1.0/zoom }
     }
 
-    pub fn from_seed(seed:u32) -> Voronoi {
-        Voronoi { simp: Simplex::from_seed(seed) }
+    pub fn from_seed(seed:u32, zoom: f64) -> Voronoi {
+        Voronoi { simp: Simplex::from_seed(seed, 1.0), zoom: 1.0/zoom }
     }
 
     pub fn get_seed(&mut self) -> u32 {
@@ -22,11 +23,13 @@ impl Voronoi {
 
 impl NoiseGen for Voronoi {
     fn get_value2d(&mut self, x: f64, y: f64) -> f64 {
-        let xi = x.floor() as int;
-        let yi = y.floor() as int;
+        let xx = x * self.zoom;
+        let yy = y * self.zoom;
+        let xi = xx.floor() as int;
+        let yi = yy.floor() as int;
 
         let mut min_dist = 2147483647.0; // 2^31
-        // candidatees for our x and y values
+        // candidates for our x and y values
         let mut x_can = 0.0;
         let mut y_can = 0.0;
 
@@ -35,8 +38,8 @@ impl NoiseGen for Voronoi {
                 let n = self.simp.get_value2d(cur_x as f64, cur_y as f64);
                 let x_pos = cur_x as f64 + n;
                 let y_pos = cur_y as f64 + n;
-                let x_dist = x_pos - x;
-                let y_dist = y_pos - y;
+                let x_dist = x_pos - xx;
+                let y_dist = y_pos - yy;
                 let dist = (x_dist*x_dist) + (y_dist*y_dist);
 
                 if dist < min_dist {
@@ -51,12 +54,15 @@ impl NoiseGen for Voronoi {
     }
 
     fn get_value3d(&mut self, x: f64, y: f64, z: f64) -> f64 {
-        let xi = x.floor() as int;
-        let yi = y.floor() as int;
-        let zi = z.floor() as int;
+        let xx = x * self.zoom;
+        let yy = y * self.zoom;
+        let zz = z * self.zoom;
+        let xi = xx.floor() as int;
+        let yi = yy.floor() as int;
+        let zi = zz.floor() as int;
 
         let mut min_dist = 2147483647.0; // 2^31
-        // candidatees for our x and y values
+        // candidates for our x and y values
         let mut x_can = 0.0;
         let mut y_can = 0.0;
         let mut z_can = 0.0;
@@ -70,9 +76,9 @@ impl NoiseGen for Voronoi {
                     let x_pos = cur_x as f64 + n;
                     let y_pos = cur_y as f64 + n;
                     let z_pos = cur_z as f64 + n;
-                    let x_dist = x_pos - x;
-                    let y_dist = y_pos - y;
-                    let z_dist = z_pos - z;
+                    let x_dist = x_pos - xx;
+                    let y_dist = y_pos - yy;
+                    let z_dist = z_pos - zz;
                     let dist = (x_dist*x_dist) + (y_dist*y_dist) + (z_dist*z_dist);
 
                     if dist < min_dist {

@@ -10,20 +10,21 @@ use gen::NoiseGen;
 
 pub struct Simplex {
     seed: u32,
+    zoom: f64,
     // 512 to remove the need for bounding array indicies
     perm: [uint, ..256]
 }
 
 impl Simplex {
-    pub fn new_rand() -> Simplex {
+    pub fn new_rand(zoom: f64) -> Simplex {
         let mut rng = rand::task_rng(); // for getting a random seed
-        let mut simp = Simplex { seed: rng.gen(), perm: [0, ..256] };
+        let mut simp = Simplex { seed: rng.gen(), zoom: 1.0/zoom, perm: [0, ..256] };
         simp.init_perm();
         simp
     }
 
-    pub fn from_seed(seed: u32) -> Simplex {
-        let mut simp = Simplex { seed: seed, perm: [0, ..256] };
+    pub fn from_seed(seed: u32, zoom: f64) -> Simplex {
+        let mut simp = Simplex { seed: seed, zoom: 1.0/zoom, perm: [0, ..256] };
         simp.init_perm();
         simp
     }
@@ -56,7 +57,9 @@ impl Simplex {
 }
 
 impl NoiseGen for Simplex {
-    fn get_value2d(&mut self, x: f64, y: f64) -> f64 {
+    fn get_value2d(&mut self, xx: f64, yy: f64) -> f64 {
+        let x = xx * self.zoom;
+        let y = yy * self.zoom;
         // sqrt(3) = 1.7320508075688772935274463415059
         static sqrt3: f64 = 1.7320508075688772935274463415059;
         static F2: f64 = 0.5*(sqrt3-1.0);
@@ -125,7 +128,11 @@ impl NoiseGen for Simplex {
         70.0*(n0+n1+n2)
     }
 
-    fn get_value3d(&mut self, x: f64, y: f64, z: f64) -> f64 {
+    fn get_value3d(&mut self, xx: f64, yy: f64, zz: f64) -> f64 {
+        let x = xx * self.zoom;
+        let y = yy * self.zoom;
+        let z = zz * self.zoom;
+
         static F3: f64 = 1.0/3.0;
         static G3: f64 = 1.0/6.0;
 

@@ -12,8 +12,8 @@ pub struct Billow {
 }
 
 impl Billow {
-    pub fn new_rand(octaves: int, persitence: f64, gain: f64) -> Billow {
-        Billow {simp: Simplex::new_rand(),
+    pub fn new_rand(octaves: int, persitence: f64, gain: f64, zoom: f64) -> Billow {
+        Billow {simp: Simplex::new_rand(zoom),
                 octaves: octaves,
                 persitence: persitence,
                 gain: gain,
@@ -21,8 +21,8 @@ impl Billow {
             }
     }
 
-    pub fn from_seed(seed:u32, octaves: int, persitence: f64, gain: f64) -> Billow {
-        Billow {simp: Simplex::from_seed(seed),
+    pub fn from_seed(seed:u32, octaves: int, persitence: f64, gain: f64, zoom: f64) -> Billow {
+        Billow {simp: Simplex::from_seed(seed, zoom),
                 octaves: octaves,
                 persitence: persitence,
                 gain: gain,

@@ -9,7 +9,7 @@ use image::GenericImage;
 use std::io::File;
 
 fn main() {
-    let mut ngen = Voronoi::new_rand();
+    let mut ngen = Voronoi::new_rand(15.0);
 
     println!("Noise seed is {}", ngen.get_seed());
     
@@ -17,7 +17,7 @@ fn main() {
     let mut imbuf = image::ImageBuf::new(img_size, img_size);
     for x in range(0, img_size) {
         for y in range(0, img_size) {
-            let n = ngen.get_value2d((x as f64)*0.075, (y as f64)*0.075);
+            let n = ngen.get_value2d(x as f64, y as f64);
             let nn = bound(n, 0.0, 1.0, -1.0, 1.0);
             let col = (nn * 255.0) as u8;
             let pixel = image::Luma(col);

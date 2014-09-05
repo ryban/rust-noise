@@ -8,7 +8,7 @@ use image::GenericImage;
 use std::io::File;
 
 fn main() {
-    let mut ngen = Billow::new_rand(24, 0.5, 2.5);
+    let mut ngen = Billow::new_rand(24, 0.5, 2.5, 100.0);
 
     println!("Noise seed is {}", ngen.get_seed());
     
@@ -16,7 +16,7 @@ fn main() {
     let mut imbuf = image::ImageBuf::new(img_size, img_size);
     for x in range(0, img_size) {
         for y in range(0, img_size) {
-            let n = ngen.get_value2d((x as f64)*0.01, (y as f64)*0.01);
+            let n = ngen.get_value2d((x as f64), (y as f64));
             let col = (n * 255.0) as u8;
             let pixel = image::Luma(col);
             imbuf.put_pixel(x, y, pixel);

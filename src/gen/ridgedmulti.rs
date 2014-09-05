@@ -16,10 +16,10 @@ pub struct RidgedMulti {
 }
 
 impl RidgedMulti {
-    pub fn new_rand(octaves: int, gain: f64, lac: f64, offset: f64, h: f64) -> RidgedMulti {
+    pub fn new_rand(octaves: int, gain: f64, lac: f64, offset: f64, h: f64, zoom: f64) -> RidgedMulti {
         let freqs = RidgedMulti::calc_freqs(octaves, lac, h);
         RidgedMulti {  
-            simp: Simplex::new_rand(),
+            simp: Simplex::new_rand(zoom),
             octaves: octaves,
             gain: gain,
             lacunarity: lac,
@@ -29,10 +29,10 @@ impl RidgedMulti {
             }
     }
 
-    pub fn from_seed(seed: u32, octaves: int, gain: f64, lac: f64, offset: f64, h: f64) -> RidgedMulti {
+    pub fn from_seed(seed: u32, octaves: int, gain: f64, lac: f64, offset: f64, h: f64, zoom: f64) -> RidgedMulti {
         let freqs = RidgedMulti::calc_freqs(octaves, lac, h);
         RidgedMulti {  
-            simp: Simplex::from_seed(seed),
+            simp: Simplex::from_seed(seed, zoom),
             octaves: octaves,
             gain: gain,
             lacunarity: lac,

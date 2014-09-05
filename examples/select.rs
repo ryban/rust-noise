@@ -11,9 +11,10 @@ use image::GenericImage;
 use std::io::File;
 
 fn main() {
-    let mut control = FBM::new_rand(24, 0.5, 2.5);
-    let mut high = Billow::new_rand(24, 0.5, 2.5);
-    let mut low = RidgedMulti::new_rand(24, 1.7, 1.9, 1.0, 0.75);
+    let zoom = 100.0;
+    let mut control = FBM::new_rand(24, 0.5, 2.5, 4.0*zoom);
+    let mut high = Billow::new_rand(24, 0.5, 2.5, zoom);
+    let mut low = RidgedMulti::new_rand(24, 1.7, 1.9, 1.0, 0.75, zoom);
     let threshold = 0.5;
     let falloff = 0.1;
     
@@ -21,9 +22,9 @@ fn main() {
     let mut imbuf = image::ImageBuf::new(img_size, img_size);
     for x in range(0, img_size) {
         for y in range(0, img_size) {
-            let xx = (x as f64)*0.01;
-            let yy = (y as f64)*0.01;
-            let control_n = control.get_value2d(xx*0.25, yy*0.25);
+            let xx = x as f64;
+            let yy = y as f64;
+            let control_n = control.get_value2d(xx, yy);
             let n = select_2d(
                             control_n, &mut low, &mut high,
                             threshold, falloff,
