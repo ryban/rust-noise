@@ -5,7 +5,6 @@ pub mod fbm;
 pub mod ridgedmulti;
 pub mod billow;
 pub mod voronoi;
-// pub mod select;
 
 pub trait NoiseGen {
     fn get_value2d(&mut self, x: f64, y: f64) -> f64;

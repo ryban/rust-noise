@@ -25,3 +25,9 @@ name = "billow"
 
 [[example]]
 name = "voronoi"
+
+[[example]]
+name = "select"
+
+[[example]]
+name = "step"
