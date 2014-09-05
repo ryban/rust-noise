@@ -8,7 +8,7 @@ pub struct FBM {
     octaves: int,
     persitence: f64,
     gain: f64,
-    maxVal: f64
+    max_val: f64
 }
 
 impl FBM {
@@ -17,7 +17,7 @@ impl FBM {
                 octaves: octaves,
                 persitence: persitence,
                 gain: gain,
-                maxVal: FBM::calc_max(octaves, persitence)
+                max_val: FBM::calc_max(octaves, persitence)
             }
     }
 
@@ -26,7 +26,7 @@ impl FBM {
                 octaves: octaves,
                 persitence: persitence,
                 gain: gain,
-                maxVal: FBM::calc_max(octaves, persitence)
+                max_val: FBM::calc_max(octaves, persitence)
             }
     }
 
@@ -36,7 +36,7 @@ impl FBM {
 
     // static function for calculating the max/min values the noise can have
     // used to bound the noise to [-1,1]
-    // If the octaves or persitence ever change, maxVal must be recalculated
+    // If the octaves or persitence ever change, max_val must be recalculated
     fn calc_max(octaves: int, persitence: f64) -> f64 {
         let mut a = 1.0;
         let mut n = 0.0;
@@ -61,7 +61,7 @@ impl NoiseGen for FBM {
             amp *= self.persitence;
         }
 
-        bound(n, 0.0, 1.0, -self.maxVal, self.maxVal)
+        bound(n, 0.0, 1.0, -self.max_val, self.max_val)
     }
 
     fn get_value3d(&mut self, x: f64, y: f64, z: f64) -> f64 {
@@ -75,7 +75,7 @@ impl NoiseGen for FBM {
             amp *= self.persitence;
         }
 
-        bound(n, 0.0, 1.0, -self.maxVal, self.maxVal)
+        bound(n, 0.0, 1.0, -self.max_val, self.max_val)
     }
 }
 
