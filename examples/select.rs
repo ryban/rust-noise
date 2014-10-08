@@ -2,6 +2,9 @@
 
 extern crate noise;
 extern crate image;
+extern crate time;
+
+
 use noise::gen::NoiseGen;
 use noise::gen::fbm::FBM;
 use noise::gen::ridgedmulti::RidgedMulti;
@@ -9,6 +12,7 @@ use noise::gen::billow::Billow;
 use noise::utils::select_2d;
 use image::GenericImage;
 use std::io::File;
+use time::precise_time_s;
 
 fn main() {
     let zoom = 100.0;
@@ -20,6 +24,8 @@ fn main() {
     
     let img_size = 512 as u32;
     let mut imbuf = image::ImageBuf::new(img_size, img_size);
+    
+    let start = precise_time_s();
     for x in range(0, img_size) {
         for y in range(0, img_size) {
             let xx = x as f64;
@@ -35,8 +41,10 @@ fn main() {
             imbuf.put_pixel(x, y, pixel);
         }
     }
+    let end = precise_time_s();
 
     let fout = File::create(&Path::new("select.png")).unwrap();
     let _ = image::ImageLuma8(imbuf).save(fout, image::PNG);
     println!("select.png saved");
+    println!("generated {} points in {} ms", img_size*img_size, (end-start)*1000.0);
 }
