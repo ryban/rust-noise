@@ -12,7 +12,7 @@ pub struct Simplex {
     seed: u32,
     zoom: f64,
     // 512 to remove the need for bounding array indicies
-    perm: [uint, ..256]
+    perm: [u8, ..256]
 }
 
 impl Simplex {
@@ -42,191 +42,142 @@ impl Simplex {
         let mut rng: LCG = SeedableRng::from_seed(self.seed);
 
         for i in range(0, 256) {
-            self.perm[i] = i as uint;
+            self.perm[i] = i as u8;
         }
         rng.shuffle(self.perm);
     }
 
-    fn dot3(g: &[int, ..3], x: f64, y: f64, z: f64) -> f64 {
-        ((g[0] as f64)*x) + ((g[1] as f64)*y) + ((g[2] as f64)*z)
-    }
+    fn extrapolate_2d(&mut self, xsb: int, ysb: int, dx: f64, dy: f64) -> f64 {
+        static GRAD_2D: [i8, ..16] = [
+             5,  2,    2,  5,
+            -5,  2,   -2,  5,
+             5, -2,    2, -5,
+            -5, -2,   -2, -5,
+        ];
 
-    fn dot2(g: &[int, ..2], x: f64, y: f64) -> f64 {
-        ((g[0] as f64)*x) + ((g[1] as f64)*y)
+        let xsb_idx = (xsb & 0xFF) as uint;
+        let ysb_idx = (ysb & 0xFF) as uint;
+        let idx = (self.perm[((self.perm[xsb_idx] as uint) + ysb_idx) & 0xFF] & 0x0E) as uint;
+        
+        ((GRAD_2D[idx] as f64) * dx) + ((GRAD_2D[idx+1u] as f64) * dy)
     }
 }
 
 impl NoiseGen for Simplex {
-    fn get_value2d(&mut self, xx: f64, yy: f64) -> f64 {
-        let x = xx * self.zoom;
-        let y = yy * self.zoom;
-        // sqrt(3) = 1.7320508075688772935274463415059
-        static sqrt3: f64 = 1.7320508075688772935274463415059;
-        static F2: f64 = 0.5*(sqrt3-1.0);
-        static G2: f64 = (3.0-sqrt3)/6.0;
+    // OpenSimplex implimentation: https://gist.github.com/KdotJPG/b1270127455a94ac5d19
+    fn get_value2d(&mut self, x: f64, y: f64) -> f64 {
+        static STRETCH_CONSTANT: f64 = -0.211324865405187;
+        static SQUISH_CONSTANT: f64 = 0.366025403784439;
+        static NORM_CONSTANT: f64 = 47.0;
 
-        static grad:[[int, ..2], ..12] = [[1,1],[-1,1],[1,-1],[-1,-1],
-                                          [1,0],[-1,0],[1,0],[-1,0],
-                                          [0,1],[0,-1],[0,1],[0,-1]];
+        let x = x * self.zoom;
+        let y = y * self.zoom;
 
-        let mut n0: f64;
-        let mut n1: f64;
-        let mut n2: f64;
+        let stretch_offset = (x + y) * STRETCH_CONSTANT;
+        let xs = x + stretch_offset;
+        let ys = y + stretch_offset;
 
-        let s: f64 = (x+y)*F2;
-        let i = (x+s).floor() as int;
-        let j = (y+s).floor() as int;
+        // Floor to get grid coordinates of rhombus (stretched square) super cell origin
+        let xsb = xs.floor() as int;
+        let ysb = ys.floor() as int;
 
-        let t: f64 = ((i+j) as f64)*G2;
-        let x0: f64 = x-((i as f64)-t);
-        let y0: f64 = y-((j as f64)-t);
+        // Skew out to get actual coordinates of rhombus origin
+        let squish_offset = ((xsb + ysb) as f64) * SQUISH_CONSTANT;
+        let xb = (xsb as f64) + squish_offset;
+        let yb = (ysb as f64) + squish_offset;
 
-        let mut i1: uint;
-        let mut j1: uint;
+        // Computer grid coordinates relative to rhombus origin
+        let xins = xs - (xsb as f64);
+        let yins = ys - (ysb as f64);
 
-        if x0 > y0 {
-            i1 = 1;
-            j1 = 0;
+        // Sum those together to get a value that determines which region we're in
+        let in_sum = xins + yins;
+
+        // Position relative to origin point
+        let dx0 = x - xb;
+        let dy0 = y - yb;
+
+        // Contribution (1,0)
+        let dx1 = dx0 - 1.0 - SQUISH_CONSTANT;
+        let dy1 = dy0 - 0.0 - SQUISH_CONSTANT;
+        let attn1 = 2.0 - (dx1 * dx1) - (dy1 * dy1);
+
+        let v1: f64 = if attn1 > 0.0 {
+            let attn1_4 = attn1*attn1*attn1*attn1;
+            attn1_4*self.extrapolate_2d(xsb+1, ysb+0, dx1, dy1)
         } else {
-            i1 = 0;
-            j1 = 1;
-        }
+            0.0
+        };
 
-        let x1: f64 = x0-(i1 as f64)+G2;
-        let y1: f64 = y0-(j1 as f64)+G2;
-        let x2: f64 = x0-1.0+2.0*G2;
-        let y2: f64 = y0-1.0+2.0*G2;
-
-        let ii = (i & 0xff) as uint;
-        let jj = (j & 0xff) as uint;
-
-        let gi0 = (self.perm[(ii+   self.perm[(jj   )&255])&255] % 12) as uint;
-        let gi1 = (self.perm[(ii+i1+self.perm[(jj+j1)&255])&255] % 12) as uint;
-        let gi2 = (self.perm[(ii+1u+self.perm[(jj+1u)&255])&255] % 12) as uint;
-
-        let t0: f64 = 0.5-(x0*x0)-(y0*y0);
-        if t0 < 0.0 {
-            n0 = 0.0;
+        // Contribution (0,1)
+        let dx2 = dx0 - 0.0 - SQUISH_CONSTANT;
+        let dy2 = dy0 - 1.0 - SQUISH_CONSTANT;
+        let attn2 = 2.0 - (dx2 * dx2) - (dy2 * dy2);
+        
+        let v2: f64 = if attn2 > 0.0 {
+            let attn2_4 = attn2*attn2*attn2*attn2;
+            attn2_4*self.extrapolate_2d(xsb+0, ysb+1, dx2, dy2)
         } else {
-            n0 = t0*t0*t0*t0*Simplex::dot2(&grad[gi0], x0, y0);
-        }
+            0.0
+        };
 
-        let t1: f64 = 0.5-(x1*x1)-(y1*y1);
-        if t1 < 0.0 {
-            n1 = 0.0;
+        let (xsv_ext, ysv_ext, dx_ext, dy_ext) = if in_sum <= 1.0 { // We're inside the triangle (2-Simplex) at (0,0)
+            let zins = 1.0 - in_sum;
+            if zins > xins || zins > yins { // (0,0) is one of the closest two triangular vertices
+                if xins > yins {
+                    (xsb+1, ysb-1, dx0-1.0, dy0+1.0)
+                } else {
+                    (xsb-1, ysb+1, dx0+1.0, dy0-1.0)
+                }
+            }else { // (1,0) and (0,1) are the closest two vertices.
+                (xsb+1, ysb+1, dx0-1.0-(2.0*SQUISH_CONSTANT), dy0-1.0-(2.0*SQUISH_CONSTANT))
+            }
+        }else { // We're inside the triangle (2-Simplex) at (1,1)
+            let zins = 2.0 - in_sum;
+            if zins < xins || zins < yins { // (0,0) is one of the closest two triangular vertices
+                if xins > yins {
+                    (xsb+2, ysb+0, dx0-2.0-(2.0*SQUISH_CONSTANT), dy0+0.0-(2.0*SQUISH_CONSTANT))
+                }else {
+                    (xsb+0, ysb+2, dx0-0.0-(2.0*SQUISH_CONSTANT), dy0-2.0-(2.0*SQUISH_CONSTANT))
+                }
+            }else { // (1,0) and (0,1) are the closest two vertices.
+                (xsb, ysb, dx0, dy0)
+            }
+        };
+        // In the original implementation this was done in the above,
+        // but I think this is nicer
+        let (xsb, ysb, dx0, dy0) = if in_sum <= 1.0 {
+            (xsb, ysb, dx0, dy0)
+        }else {
+            (xsb + 1,
+             ysb + 1,
+             dx0 - 1.0 - (2.0 * SQUISH_CONSTANT),
+             dy0 - 1.0 - (2.0 * SQUISH_CONSTANT))
+        };
+
+        // Contribution (0,0) or (1,1)
+        let attn0 = 2.0 - (dx0 * dx0) - (dy0 * dy0);
+        let v0: f64 = if attn0 > 0.0 {
+            let attn0_4 = attn0*attn0*attn0*attn0;
+            attn0_4*self.extrapolate_2d(xsb, ysb, dx0, dy0)
         } else {
-            n1 = t1*t1*t1*t1*Simplex::dot2(&grad[gi1], x1, y1);
-        }
+            0.0
+        };
 
-        let t2: f64 = 0.5-(x2*x2)-(y2*y2);
-        if t2 < 0.0 {
-            n2 = 0.0;
+        // Extra vertex
+        let attn_ext = 2.0 - (dx_ext * dx_ext) - (dy_ext * dy_ext);
+        let v_ext: f64 = if attn_ext > 0.0 {
+            let attn_ext_4 = attn_ext*attn_ext*attn_ext*attn_ext;
+            attn_ext_4*self.extrapolate_2d(xsv_ext, ysv_ext, dx_ext, dy_ext)
         } else {
-            n2 = t2*t2*t2*t2*Simplex::dot2(&grad[gi2], x2, y2);
-        }
+            0.0
+        };
 
-        70.0*(n0+n1+n2)
+        (v0 + v1 + v2 + v_ext) / NORM_CONSTANT
     }
 
-    fn get_value3d(&mut self, xx: f64, yy: f64, zz: f64) -> f64 {
-        let x = xx * self.zoom;
-        let y = yy * self.zoom;
-        let z = zz * self.zoom;
-
-        static F3: f64 = 1.0/3.0;
-        static G3: f64 = 1.0/6.0;
-
-        static grad: [[int, ..3], ..12] = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
-                                           [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
-                                           [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
-
-        let mut n0: f64;
-        let mut n1: f64;
-        let mut n2: f64;
-        let mut n3: f64;
-
-        let s: f64 = (x+y+z)*F3;
-        let i = (x+s).floor() as int;
-        let j = (y+s).floor() as int;
-        let k = (z+s).floor() as int;
-
-        let t: f64 = ((i+j+k) as f64)*G3;
-        let x0: f64 = x-((i as f64)-t);
-        let y0: f64 = y-((j as f64)-t);
-        let z0: f64 = z-((k as f64)-t);
-
-        let mut i1: uint;
-        let mut j1: uint;
-        let mut k1: uint;
-        let mut i2: uint;
-        let mut j2: uint;
-        let mut k2: uint;
-
-        if x0 >= y0 {
-            if y0 >= z0 {
-                i1=1; j1=0; k1=0; i2=1; j2=1; k2=0;
-            }else if x0 >= z0 {
-                i1=1; j1=0; k1=0; i2=1; j2=0; k2=1;
-            }else {
-                i1=0; j1=0; k1=1; i2=1; j2=0; k2=1;
-            }
-        }else { // x0 < y0
-            if y0 < z0 {
-                i1=0; j1=0; k1=1; i2=0; j2=1; k2=1;
-            }else if x0 < z0 {
-                i1=0; j1=1; k1=0; i2=0; j2=1; k2=1;
-            }else {
-                i1=0; j1=1; k1=0; i2=1; j2=1; k2=0;
-            }
-        }
-
-        let x1: f64 = x0 - (i1 as f64) + G3;
-        let y1: f64 = y0 - (j1 as f64) + G3;
-        let z1: f64 = z0 - (k1 as f64) + G3;
-        let x2: f64 = x0 - (i2 as f64) + (2.0*G3);
-        let y2: f64 = y0 - (j2 as f64) + (2.0*G3);
-        let z2: f64 = z0 - (k2 as f64) + (2.0*G3);
-        let x3: f64 = x0 - 1.0 + (3.0*G3);
-        let y3: f64 = y0 - 1.0 + (3.0*G3);
-        let z3: f64 = z0 - 1.0 + (3.0*G3);
-
-        let ii = (i & 0xff) as uint;
-        let jj = (j & 0xff) as uint;
-        let kk = (k & 0xff) as uint;
-
-        let gi0 = (self.perm[(ii+   self.perm[(jj+   self.perm[ kk        ])&255])&255]%12) as uint;
-        let gi1 = (self.perm[(ii+i1+self.perm[(jj+j1+self.perm[(kk+k1)&255])&255])&255]%12) as uint;
-        let gi2 = (self.perm[(ii+i2+self.perm[(jj+j2+self.perm[(kk+k2)&255])&255])&255]%12) as uint;
-        let gi3 = (self.perm[(ii+1u+self.perm[(jj+1u+self.perm[(kk+1u)&255])&255])&255]%12) as uint;
-    
-        let t0 = 0.5-(x0*x0)-(y0*y0)-(z0*z0);
-        if t0 < 0.0 {
-            n0 = 0.0;
-        } else {
-            n0 = t0*t0*t0*t0*Simplex::dot3(&grad[gi0], x0, y0, z0);
-        }
-
-        let t1 = 0.5-(x1*x1)-(y1*y1)-(z1*z1);
-        if t1 < 0.0 {
-            n1 = 0.0;
-        } else {
-            n1 = t1*t1*t1*t1*Simplex::dot3(&grad[gi1], x1, y1, z1);
-        }
-
-        let t2 = 0.5-(x2*x2)-(y2*y2)-(z2*z2);
-        if t2 < 0.0 {
-            n2 = 0.0;
-        } else {
-            n2 = t2*t2*t2*t2*Simplex::dot3(&grad[gi2], x2, y2, z2);
-        }
-
-        let t3 = 0.5-(x3*x3)-(y3*y3)-(z3*z3);
-        if t3 < 0.0 {
-            n3 = 0.0;
-        } else {
-            n3 = t3*t3*t3*t3*Simplex::dot3(&grad[gi3], x3, y3, z3);
-        }
-
-        32.0*(n0+n1+n2+n3)
+    fn get_value3d(&mut self, x: f64, y: f64, z: f64) -> f64 {
+        // TODO: All of this
+        x + y + z
     }
 }
