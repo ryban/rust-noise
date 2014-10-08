@@ -40,7 +40,7 @@ impl Billow {
     fn calc_max(octaves: int, persitence: f64) -> f64 {
         let mut a = 1.0;
         let mut n = 0.0;
-        for i in range(0, octaves) {
+        for _ in range(0, octaves) {
             n += a;
             a *= persitence;
         }
@@ -56,7 +56,7 @@ impl NoiseGen for Billow {
         let mut f = 1.0;
         let mut amp = 1.0;
 
-        for i in range(0, self.octaves) {
+        for _ in range(0, self.octaves) {
             signal = self.simp.get_value2d(x*f, y*f);
             signal = num::abs(signal);
             n += signal * amp;
@@ -73,7 +73,7 @@ impl NoiseGen for Billow {
         let mut f = 1.0;
         let mut amp = 1.0;
 
-        for i in range(0, self.octaves) {
+        for _ in range(0, self.octaves) {
             signal = self.simp.get_value3d(x*f, y*f, z*f);
             signal = num::abs(signal);
             n += signal * amp;

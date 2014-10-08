@@ -10,9 +10,9 @@ pub struct LCG {
 
 impl Rng for LCG {
     fn next_u32(&mut self) -> u32 {
-        static a: u32 = 1664525;
-        static c: u32 = 1013904223;
-        self.prev_val = (a*self.prev_val)+c; // Normally a bit mask, but is it necessary?
+        static A: u32 = 1664525;
+        static C: u32 = 1013904223;
+        self.prev_val = (A*self.prev_val)+C; // Normally a bit mask, but is it necessary?
         self.prev_val
     }
 }
